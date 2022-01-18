@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace PathFinding.BreadthFirst
+namespace PathfindingVisualizer.BreadthFirst
 {
     public class BFSNode
     {

@@ -1,4 +1,4 @@
-﻿using PathFinding.CommonMethods;
+﻿using PathfindingVisualizer.Common;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -6,65 +6,68 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Threading;
 
-namespace PathFinding.BreadthFirst
+namespace PathfindingVisualizer.BreadthFirst
 {
     public class BFSPathfinding : MainWindow
     {
-        public async static Task<List<BFSNode>> FindPath(CancellationToken cancellationToken)
+        public static List<BFSNode> Visited { get; set; }
+        public static Queue<BFSNode> Unvisited { get; set; }
+        public static async Task<List<BFSNode>> FindPath(CancellationToken cancellationToken)
         {
-            Glob_Stopwatch.Start();
-            List<BFSNode> visited = new List<BFSNode>();
-            Queue<BFSNode> unvisited = new Queue<BFSNode>();
-            unvisited.Enqueue(new BFSNode(MeshInfo.Start, null));
+            MainW.RunTime.Start();
 
-            while (unvisited.Count > 0)
+            Visited = new();
+            Unvisited = new();
+            Unvisited.Enqueue(new BFSNode(MainW.MeshInfo.Start, null));
+
+            while (Unvisited.Count > 0)
             {
-                BFSNode cur_node = unvisited.Dequeue();
+                BFSNode cur_node = Unvisited.Dequeue();
 
-                if (cur_node.Coord == MeshInfo.End)
+                if (cur_node.Coord == MainW.MeshInfo.End)
                     return CalculatePath(cur_node);
 
                 List<BFSNode> neighbours;
-                Glob_Stopwatch.Stop();
+                MainW.RunTime.Stop();
                 if (Diagonal)
                 {
-                    Glob_Stopwatch.Start();
-                    neighbours = GetNeighbourNodesDiagonal(19, 19, cur_node);
+                    MainW.RunTime.Start();
+                    neighbours = GetNeighbourNodesDiagonal(MainW.GridRows - 1, MainW.GridColumns - 1, cur_node);
                 }
                 else
                 {
-                    Glob_Stopwatch.Start();
-                    neighbours = GetNeighbour(19, 19, cur_node);
+                    MainW.RunTime.Start();
+                    neighbours = GetNeighbour(MainW.GridRows - 1, MainW.GridColumns - 1, cur_node);
                 }
 
                 foreach (var node in neighbours)
                 {
-                    if (MeshInfo.UnwalkablePos.Any(s => s == node.Coord))
+                    if (MainW.MeshInfo.UnwalkablePos.Any(s => s == node.Coord))
                         continue;
 
-                    if (unvisited.Any(s => s.Coord == node.Coord))
+                    if (Unvisited.Any(s => s.Coord == node.Coord))
                         continue;
 
-                    if (visited.Any(s => s.Coord == node.Coord))
+                    if (Visited.Any(s => s.Coord == node.Coord))
                         continue;
 
-                    unvisited.Enqueue(node);
+                    Unvisited.Enqueue(node);
 
-                    Glob_Stopwatch.Stop();
-                    if (node.Coord != MeshInfo.Start && node.Coord != MeshInfo.End)
-                        await MainW.Dispatcher.InvokeAsync(() => Common.FindAndColorCell(node.Coord, new SolidColorBrush(System.Windows.Media.Color.FromRgb(235, 206, 23))));//yellow
-                    Glob_Stopwatch.Start();
+                    MainW.RunTime.Stop();
+                    if (node.Coord != MainW.MeshInfo.Start && node.Coord != MainW.MeshInfo.End)
+                        await Shared.FindAndColorCellAsync(node.Coord, new SolidColorBrush(System.Windows.Media.Color.FromRgb(235, 206, 23)));//yellow
+                    MainW.RunTime.Start();
                 }
 
-                visited.Add(cur_node);
+                Visited.Add(cur_node);
 
-                Glob_Stopwatch.Stop();
-                if (cur_node.Coord != MeshInfo.Start && cur_node.Coord != MeshInfo.End)
-                    await MainW.Dispatcher.InvokeAsync(() => Common.FindAndColorCell(cur_node.Coord, new SolidColorBrush(System.Windows.Media.Color.FromRgb(227, 227, 227))));//white
-                await Task.Delay(_sliderValue * 100);
+                MainW.RunTime.Stop();
+                if (cur_node.Coord != MainW.MeshInfo.Start && cur_node.Coord != MainW.MeshInfo.End)
+                    await Shared.FindAndColorCellAsync(cur_node.Coord, new SolidColorBrush(System.Windows.Media.Color.FromRgb(227, 227, 227)));//white
+                await Task.Delay(MainW.SliderValue * 100, cancellationToken);
                 if (cancellationToken.IsCancellationRequested)
                     return null;
-                Glob_Stopwatch.Start();
+                MainW.RunTime.Start();
             }
 
             return null;
@@ -72,7 +75,7 @@ namespace PathFinding.BreadthFirst
 
         private static List<BFSNode> CalculatePath(BFSNode endNode)
         {
-            List<BFSNode> path = new List<BFSNode>
+            List<BFSNode> path = new()
             {
                 endNode
             };
@@ -89,7 +92,7 @@ namespace PathFinding.BreadthFirst
 
         private static List<BFSNode> GetNeighbourNodesDiagonal(int horizontallenght, int verticallenght, BFSNode main_node)
         {
-            List<BFSNode> result = new List<BFSNode>();
+            List<BFSNode> result = new();
             //Define grid bounds
             int rowMinimum = main_node.Coord.X - 1 < 0 ? main_node.Coord.X : main_node.Coord.X - 1;
             int rowMaximum = main_node.Coord.X + 1 > horizontallenght ? main_node.Coord.X : main_node.Coord.X + 1;
@@ -100,7 +103,7 @@ namespace PathFinding.BreadthFirst
                 for (int j = columnMinimum; j <= columnMaximum; j++)
                     if (i != main_node.Coord.X || j != main_node.Coord.Y)
                     {
-                        Point cur_point = new Point(i, j);
+                        Point cur_point = new(i, j);
                         result.Add(new BFSNode(cur_point, main_node));
                     }
             return result;
@@ -108,7 +111,7 @@ namespace PathFinding.BreadthFirst
 
         private static List<BFSNode> GetNeighbour(int horizontallenght, int verticallenght, BFSNode main_node)
         {
-            List<BFSNode> result = new List<BFSNode>();
+            List<BFSNode> result = new();
             //Define grid bounds
             int rowMinimum = main_node.Coord.X - 1 < 0 ? main_node.Coord.X : main_node.Coord.X - 1;
             int rowMaximum = main_node.Coord.X + 1 > horizontallenght ? main_node.Coord.X : main_node.Coord.X + 1;
@@ -118,7 +121,7 @@ namespace PathFinding.BreadthFirst
             for (int i = rowMinimum; i <= rowMaximum; i++)
                 for (int j = columnMinimum; j <= columnMaximum; j++)
                 {
-                    Point cur_point = new Point(i, j);
+                    Point cur_point = new(i, j);
                     if ((i != main_node.Coord.X || j != main_node.Coord.Y) && (main_node.Coord.X == cur_point.X || main_node.Coord.Y == cur_point.Y))
                         result.Add(new BFSNode(cur_point, main_node));
                 }

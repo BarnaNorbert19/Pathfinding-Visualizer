@@ -1,10 +1,11 @@
-﻿<Window x:Class="PathFinding.MainWindow"
+﻿<Window x:Class="PathfindingVisualizer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PathfindingVisualizer"
         mc:Ignorable="d"
-        Title="PathFinding" Height="900" Width="1065" Icon="/icon.png">
+        Title="MainWindow" Height="450" Width="800" KeyUp="Window_KeyUp" KeyDown="Window_KeyDown" >
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -16,14 +17,20 @@
 
         <Grid Grid.Column="1" Background="#3a3b3c">
             <StackPanel Orientation="Vertical">
-                <Menu HorizontalAlignment="Center" Margin="0 10 0 0">
-                    <MenuItem x:Name="SelectPathfinding">
-                        <MenuItem Header="A Star" Click="AStar_MenuItem_Click"/>
-                        <MenuItem Header="Dijkstra" Click="Dijkstra_MenuItem_Click"/>
-                        <MenuItem Header="BFS" Click="BFS_MenuItem_Click"/>
-                        <MenuItem Header="DFS" Click="DFS_MenuItem_Click"/>
-                    </MenuItem>
-                </Menu>
+                <DockPanel Grid.Row="0">
+                    <TextBlock VerticalAlignment="Top" DockPanel.Dock="Left" Text="Columns: " Foreground="White"/>
+                    <TextBox TextWrapping="Wrap" Text="{Binding GridColumns}"/>
+                </DockPanel>
+                <DockPanel Grid.Row="1">
+                    <TextBlock VerticalAlignment="Top" DockPanel.Dock="Left" Text="Rows: " Foreground="White"/>
+                    <TextBox TextWrapping="Wrap" Text="{Binding GridRows}" />
+                </DockPanel>
+                <ComboBox HorizontalAlignment="Center" Margin="0 10 0 0" SelectedItem="{Binding SelectPathfinding}">
+                    <ComboBoxItem>A Star</ComboBoxItem>
+                    <ComboBoxItem IsSelected="True">Dijkstra</ComboBoxItem>
+                    <ComboBoxItem>BFS</ComboBoxItem>
+                    <ComboBoxItem>DFS</ComboBoxItem>
+                </ComboBox>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <Button Width="60" Height="20" HorizontalAlignment="Left" Margin="10 10 10 10" Content="Start" Click="Start_btn_Click"/>
                     <Button Width="60" Height="20" HorizontalAlignment="Right" Margin="10 10 10 10" Content="Reset" Click="Reset_btn_Click"/>
@@ -54,3 +61,4 @@
         </Grid>
     </Grid>
 </Window>
+

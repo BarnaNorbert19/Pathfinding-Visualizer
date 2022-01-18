@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace PathFinding.AStar
+namespace PathfindingVisualizer.AStar
 {
     public class AStarNode
     {

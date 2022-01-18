@@ -1,22 +1,23 @@
-﻿using System;
+﻿using PathfindingVisualizer;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Draw = System.Drawing;
 
-namespace PathFinding.CommonMethods
+namespace PathfindingVisualizer.Common
 {
-    public class Common : MainWindow
+    public class Shared : MainWindow
     {
-        public static void FindAndColorCell(Draw.Point cell, SolidColorBrush brush)
+        public Draw.Point Coord { get; set; }
+        public static async Task FindAndColorCellAsync(Draw.Point cell, SolidColorBrush brush)
         {
-            var node = MainW.GridBase.Children.Cast<Border>().First(s => Grid.GetRow(s) == cell.X && Grid.GetColumn(s) == cell.Y);
-            node.Background = brush;
-        }
+            if (brush.CanFreeze)
+                brush.Freeze();
 
-        public async static Task FindAndColorCellAsync(Draw.Point cell, SolidColorBrush brush)
-        {
             await MainW.Dispatcher.InvokeAsync(() =>
                 {
                     var node = MainW.GridBase.Children.Cast<Border>().First(s => Grid.GetRow(s) == cell.X && Grid.GetColumn(s) == cell.Y);
@@ -34,5 +35,6 @@ namespace PathFinding.CommonMethods
 
             return diagonal * Math.Min(x, y) + straight * Math.Abs(x - y);
         }
+
     }
 }

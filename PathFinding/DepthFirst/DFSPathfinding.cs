@@ -1,4 +1,4 @@
-﻿using PathFinding.CommonMethods;
+﻿using PathfindingVisualizer.Common;
 using System.Collections.Generic;
 using Draw = System.Drawing;
 using System.Linq;
@@ -6,65 +6,68 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Threading;
 
-namespace PathFinding.DepthFirst
+namespace PathfindingVisualizer.DepthFirst
 {
     public class DFSPathfinding : MainWindow
     {
-        public async static Task<List<DFSNode>> FindPath(CancellationToken cancellationToken)
+        public static List<DFSNode> Visited { get; set; }
+        public static Stack<DFSNode> Unvisited { get; set; }
+        public static async Task<List<DFSNode>> FindPath(CancellationToken cancellationToken)
         {
-            Glob_Stopwatch.Start();
-            List<DFSNode> visited = new List<DFSNode>();
-            Stack<DFSNode> unvisited = new Stack<DFSNode>();
-            unvisited.Push(new DFSNode(MeshInfo.Start, null));
+            MainW.RunTime.Start();
 
-            while (unvisited.Count > 0)
+            Visited = new();
+            Unvisited = new();
+            Unvisited.Push(new DFSNode(MainW.MeshInfo.Start, null));
+
+            while (Unvisited.Count > 0)
             {
-                var cur_node = unvisited.Pop();
+                var cur_node = Unvisited.Pop();
 
-                if (cur_node.Coord == MeshInfo.End)
+                if (cur_node.Coord == MainW.MeshInfo.End)
                     return CalculatePath(cur_node);
 
                 List<DFSNode> neighbours;
-                Glob_Stopwatch.Stop();
+                MainW.RunTime.Stop();
                 if (Diagonal)
                 {
-                    Glob_Stopwatch.Start();
-                    neighbours = GetNeighbourNodesDiagonal(19, 19, cur_node);
+                    MainW.RunTime.Start();
+                    neighbours = GetNeighbourNodesDiagonal(MainW.GridRows - 1, MainW.GridColumns - 1, cur_node);
                 }
                 else
                 {
-                    Glob_Stopwatch.Start();
-                    neighbours = GetNeighbour(19, 19, cur_node);
+                    MainW.RunTime.Start();
+                    neighbours = GetNeighbour(MainW.GridRows - 1, MainW.GridColumns - 1, cur_node);
                 }
 
                 foreach (var neighbour in neighbours)
                 {
-                    if (MeshInfo.UnwalkablePos.Any(s => s == neighbour.Coord))
+                    if (MainW.MeshInfo.UnwalkablePos.Any(s => s == neighbour.Coord))
                         continue;
 
-                    if (visited.Any(s => s.Coord == neighbour.Coord))
+                    if (Visited.Any(s => s.Coord == neighbour.Coord))
                         continue;
 
-                    if (unvisited.Any(s => s.Coord == neighbour.Coord))
+                    if (Unvisited.Any(s => s.Coord == neighbour.Coord))
                         continue;
 
-                    unvisited.Push(neighbour);
-                    Glob_Stopwatch.Stop();
-                    await MainW.Dispatcher.InvokeAsync(() => Common.FindAndColorCell(neighbour.Coord, new SolidColorBrush(Color.FromRgb(235, 206, 23))));//yellow
-                    Glob_Stopwatch.Start();
+                    Unvisited.Push(neighbour);
+                    MainW.RunTime.Stop();
+                    await MainW.Dispatcher.InvokeAsync(() => Shared.FindAndColorCellAsync(neighbour.Coord, new SolidColorBrush(Color.FromRgb(235, 206, 23))));//yellow
+                    MainW.RunTime.Start();
                 }
 
-                Glob_Stopwatch.Stop();
-                visited.Add(cur_node);
-                Glob_Stopwatch.Start();
+                MainW.RunTime.Stop();
+                Visited.Add(cur_node);
+                MainW.RunTime.Start();
 
-                Glob_Stopwatch.Stop();
-                await MainW.Dispatcher.InvokeAsync(() => Common.FindAndColorCell(cur_node.Coord, new SolidColorBrush(Color.FromRgb(227, 227, 227))));//white
+                MainW.RunTime.Stop();
+                await Shared.FindAndColorCellAsync(cur_node.Coord, new SolidColorBrush(Color.FromRgb(227, 227, 227)));//white
 
-                await Task.Delay(_sliderValue * 100);
+                await Task.Delay(MainW.SliderValue * 100, cancellationToken);
                 if (cancellationToken.IsCancellationRequested)
                     return null;
-                Glob_Stopwatch.Start();
+                MainW.RunTime.Start();
             }
 
             return null;
@@ -72,7 +75,7 @@ namespace PathFinding.DepthFirst
 
         private static List<DFSNode> CalculatePath(DFSNode endNode)
         {
-            List<DFSNode> path = new List<DFSNode>
+            List<DFSNode> path = new()
             {
                 endNode
             };
@@ -89,7 +92,7 @@ namespace PathFinding.DepthFirst
 
         private static List<DFSNode> GetNeighbourNodesDiagonal(int horizontallenght, int verticallenght, DFSNode main_node)
         {
-            List<DFSNode> result = new List<DFSNode>();
+            List<DFSNode> result = new();
             //Define grid bounds
             int rowMinimum = main_node.Coord.X - 1 < 0 ? main_node.Coord.X : main_node.Coord.X - 1;
             int rowMaximum = main_node.Coord.X + 1 > horizontallenght ? main_node.Coord.X : main_node.Coord.X + 1;
@@ -100,7 +103,7 @@ namespace PathFinding.DepthFirst
                 for (int j = columnMinimum; j <= columnMaximum; j++)
                     if (i != main_node.Coord.X || j != main_node.Coord.Y)
                     {
-                        Draw.Point cur_point = new Draw.Point(i, j);
+                        Draw.Point cur_point = new(i, j);
                         result.Add(new DFSNode(cur_point, main_node));
                     }
             return result;
@@ -108,7 +111,7 @@ namespace PathFinding.DepthFirst
 
         private static List<DFSNode> GetNeighbour(int horizontallenght, int verticallenght, DFSNode main_node)
         {
-            List<DFSNode> result = new List<DFSNode>();
+            List<DFSNode> result = new();
             //Define grid bounds
             int rowMinimum = main_node.Coord.X - 1 < 0 ? main_node.Coord.X : main_node.Coord.X - 1;
             int rowMaximum = main_node.Coord.X + 1 > horizontallenght ? main_node.Coord.X : main_node.Coord.X + 1;
@@ -118,7 +121,7 @@ namespace PathFinding.DepthFirst
             for (int i = rowMinimum; i <= rowMaximum; i++)
                 for (int j = columnMinimum; j <= columnMaximum; j++)
                 {
-                    Draw.Point cur_point = new Draw.Point(i, j);
+                    Draw.Point cur_point = new(i, j);
                     if ((i != main_node.Coord.X || j != main_node.Coord.Y) && (main_node.Coord.X == cur_point.X || main_node.Coord.Y == cur_point.Y))
                         result.Add(new DFSNode(cur_point, main_node));
                 }

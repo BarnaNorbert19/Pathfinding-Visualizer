@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace PathFinding.Dijkstra
+namespace PathfindingVisualizer.Dijkstra
 {
     public class DijkstraNode
     {

@@ -1,20 +1,24 @@
 ﻿using System.Windows;
 using System.Windows.Media;
-public static class GetChildType
+
+namespace PathfindingVisualizer.Common
 {
-    public static T GetChildOfType<T>(this DependencyObject depObj) where T : DependencyObject
+    public static class GetChildType
     {
-        if (depObj == null) 
-            return null;
-
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+        public static T? GetChildOfType<T>(this DependencyObject depObj) where T : DependencyObject
         {
-            var child = VisualTreeHelper.GetChild(depObj, i);
+            if (depObj == null)
+                return null;
 
-            var result = (child as T) ?? GetChildOfType<T>(child);
-            if (result != null) 
-                return result;
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+            {
+                var child = VisualTreeHelper.GetChild(depObj, i);
+
+                var result = (child as T) ?? GetChildOfType<T>(child);
+                if (result != null)
+                    return result;
+            }
+            return null;
         }
-        return null;
     }
 }

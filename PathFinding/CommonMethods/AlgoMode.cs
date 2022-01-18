@@ -1,10 +1,10 @@
-﻿namespace PathFinding.CommonMethods
+﻿namespace PathfindingVisualizer.Common
 {
-    public enum AlgoMode
+    public class AlgoMode
     {
-        AStar = 1,
-        Dijkstra = 2,
-        BFS = 3,
-        DFS = 4
+        public const string AStar = "A Star";
+        public const string Dijkstra = "Dijkstra";
+        public const string BFS = "BFS";
+        public const string DFS = "DFS";
     }
 }

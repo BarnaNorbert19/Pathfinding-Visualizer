@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace PathFinding.DepthFirst
+namespace PathfindingVisualizer.DepthFirst
 {
     public class DFSNode
     {

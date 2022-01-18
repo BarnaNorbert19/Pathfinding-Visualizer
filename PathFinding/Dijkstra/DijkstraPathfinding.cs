@@ -1,4 +1,4 @@
-﻿using PathFinding.CommonMethods;
+﻿using PathfindingVisualizer.Common;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -7,19 +7,19 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace PathFinding.Dijkstra
+namespace PathfindingVisualizer.Dijkstra
 {
     public class DijkstraPathfinding : MainWindow
     {
-        public static List<DijkstraNode> Visited;
-        public static List<DijkstraNode> Unvisited;
-        public async static Task<List<DijkstraNode>> FindPath(CancellationToken cancellationToken)
+        public static List<DijkstraNode> Visited { get; set; }
+        public static List<DijkstraNode> Unvisited { get; set; }
+        public static async Task<List<DijkstraNode>> FindPath(CancellationToken cancellationToken)
         {
-            Glob_Stopwatch.Start();
+            MainW.RunTime.Start();
             Visited = new List<DijkstraNode>();
             Unvisited = new List<DijkstraNode>
             {
-                new DijkstraNode(MeshInfo.Start, null)
+                new DijkstraNode(MainW.MeshInfo.Start, null)
             };
 
             while (Unvisited.Count > 0)
@@ -28,70 +28,70 @@ namespace PathFinding.Dijkstra
                 Unvisited.Remove(cur_node);
                 List<DijkstraNode> neighbours;
 
-                Glob_Stopwatch.Stop();
+                MainW.RunTime.Stop();
                 if (Diagonal)
                 {
-                    Glob_Stopwatch.Start();
-                    neighbours = GetNeighbourNodesDiagonal(19, 19, cur_node);
+                    MainW.RunTime.Start();
+                    neighbours = GetNeighbourNodesDiagonal(MainW.GridRows - 1, MainW.GridColumns - 1, cur_node);
                 }
                 else
                 {
-                    Glob_Stopwatch.Start();
-                    neighbours = GetNeighbour(19, 19, cur_node);
+                    MainW.RunTime.Start();
+                    neighbours = GetNeighbour(MainW.GridRows - 1, MainW.GridColumns - 1, cur_node);
                 }
 
                 foreach (var node in neighbours)
                 {
-                    if (MeshInfo.UnwalkablePos.Any(s => s == node.Coord))
+                    if (MainW.MeshInfo.UnwalkablePos.Any(s => s == node.Coord))
                         continue;
 
                     if (Unvisited.Any(s => s.Coord == node.Coord))
                         continue;
 
                     var targetNode = Visited.FirstOrDefault(s => s.Coord == node.Coord);
-                    if (!(targetNode is null))
+                    if (targetNode is not null)
                     {
                         if (cur_node.ParentNode.G > targetNode.G)
                         {
                             cur_node.ParentNode = targetNode;
-                            cur_node.G = Common.Distance(cur_node.Coord, cur_node.ParentNode.Coord) + targetNode.G;
-                            Glob_Stopwatch.Stop();
-                            if (ShowG)
+                            cur_node.G = Shared.Distance(cur_node.Coord, cur_node.ParentNode.Coord) + targetNode.G;
+                            MainW.RunTime.Stop();
+                            if (MainW.ShowG)
                                 await AddGTextToNode(cur_node);
-                            Glob_Stopwatch.Start();
+                            MainW.RunTime.Start();
                         }
                         continue;
                     }
 
                     Unvisited.Insert(0, node);
 
-                    Glob_Stopwatch.Stop();
-                    if (ShowG)
+                    MainW.RunTime.Stop();
+                    if (MainW.ShowG)
                         await AddGTextToNode(node);
 
-                    if (node.Coord != MeshInfo.End && node.Coord != MeshInfo.Start)
-                        await MainW.Dispatcher.InvokeAsync(() => Common.FindAndColorCell(node.Coord, new SolidColorBrush(System.Windows.Media.Color.FromRgb(235, 206, 23))));//yellow
-                    Glob_Stopwatch.Start();
+                    if (node.Coord != MainW.MeshInfo.End && node.Coord != MainW.MeshInfo.Start)
+                        await Shared.FindAndColorCellAsync(node.Coord, new SolidColorBrush(System.Windows.Media.Color.FromRgb(235, 206, 23)));//yellow
+                    MainW.RunTime.Start();
                 }
 
                 Visited.Add(cur_node);
 
-                if (cur_node.Coord == MeshInfo.End)
+                if (cur_node.Coord == MainW.MeshInfo.End)
                     return CalculatePath(cur_node);
 
 
 
-                Glob_Stopwatch.Stop();
-                if (ShowG)
+                MainW.RunTime.Stop();
+                if (MainW.ShowG)
                     await AddGTextToNode(cur_node);
 
-                if (cur_node.Coord != MeshInfo.End && cur_node.Coord != MeshInfo.Start)
-                    await MainW.Dispatcher.InvokeAsync(() => Common.FindAndColorCell(cur_node.Coord, new SolidColorBrush(System.Windows.Media.Color.FromRgb(227, 227, 227))));//white
+                if (cur_node.Coord != MainW.MeshInfo.End && cur_node.Coord != MainW.MeshInfo.Start)
+                    await Shared.FindAndColorCellAsync(cur_node.Coord, new SolidColorBrush(System.Windows.Media.Color.FromRgb(227, 227, 227)));//white
 
-                await Task.Delay(_sliderValue * 100);
+                await Task.Delay(MainW.SliderValue * 100, cancellationToken);
                 if (cancellationToken.IsCancellationRequested)
                     return null;
-                Glob_Stopwatch.Start();
+                MainW.RunTime.Start();
             }
 
             return null;
@@ -99,7 +99,7 @@ namespace PathFinding.Dijkstra
 
         private static List<DijkstraNode> CalculatePath(DijkstraNode endNode)
         {
-            List<DijkstraNode> path = new List<DijkstraNode>
+            List<DijkstraNode> path = new()
             {
                 endNode
             };
@@ -116,7 +116,7 @@ namespace PathFinding.Dijkstra
 
         private static List<DijkstraNode> GetNeighbourNodesDiagonal(int horizontallenght, int verticallenght, DijkstraNode main_node)
         {
-            List<DijkstraNode> result = new List<DijkstraNode>();
+            List<DijkstraNode> result = new();
             //Define grid bounds
             int rowMinimum = main_node.Coord.X - 1 < 0 ? main_node.Coord.X : main_node.Coord.X - 1;
             int rowMaximum = main_node.Coord.X + 1 > horizontallenght ? main_node.Coord.X : main_node.Coord.X + 1;
@@ -127,15 +127,15 @@ namespace PathFinding.Dijkstra
                 for (int j = columnMinimum; j <= columnMaximum; j++)
                     if (i != main_node.Coord.X || j != main_node.Coord.Y)
                     {
-                        Point cur_point = new Point(i, j);
-                        result.Add(new DijkstraNode(cur_point, main_node, Common.Distance(cur_point, main_node.Coord) + main_node.G));
+                        Point cur_point = new(i, j);
+                        result.Add(new DijkstraNode(cur_point, main_node, Shared.Distance(cur_point, main_node.Coord) + main_node.G));
                     }
             return result;
         }
 
         private static List<DijkstraNode> GetNeighbour(int horizontallenght, int verticallenght, DijkstraNode main_node)
         {
-            List<DijkstraNode> result = new List<DijkstraNode>();
+            List<DijkstraNode> result = new();
             //Define grid bounds
             int rowMinimum = main_node.Coord.X - 1 < 0 ? main_node.Coord.X : main_node.Coord.X - 1;
             int rowMaximum = main_node.Coord.X + 1 > horizontallenght ? main_node.Coord.X : main_node.Coord.X + 1;
@@ -145,16 +145,16 @@ namespace PathFinding.Dijkstra
             for (int i = rowMinimum; i <= rowMaximum; i++)
                 for (int j = columnMinimum; j <= columnMaximum; j++)
                 {
-                    Point cur_point = new Point(i, j);
+                    Point cur_point = new(i, j);
                     if ((i != main_node.Coord.X || j != main_node.Coord.Y) && (main_node.Coord.X == cur_point.X || main_node.Coord.Y == cur_point.Y))
-                        result.Add(new DijkstraNode(cur_point, main_node, Common.Distance(cur_point, main_node.Coord) + main_node.G));
+                        result.Add(new DijkstraNode(cur_point, main_node, Shared.Distance(cur_point, main_node.Coord) + main_node.G));
                 }
             return result;
         }
 
-        public async static Task AddGTextToAll(List<DijkstraNode> nodes)
+        public static async Task AddGTextToAll(List<DijkstraNode> nodes)
         {
-            if (!(nodes is null))
+            if (nodes is not null)
                 await MainW.Dispatcher.InvokeAsync(() =>
                 {
                     for (int i = 0; i < nodes.Count; i++)
@@ -169,7 +169,7 @@ namespace PathFinding.Dijkstra
                 });
         }
 
-        public async static Task AddGTextToNode(DijkstraNode nodes)
+        public static async Task AddGTextToNode(DijkstraNode nodes)
         {
             await MainW.Dispatcher.InvokeAsync(() =>
             {
@@ -182,7 +182,7 @@ namespace PathFinding.Dijkstra
             });
         }
 
-        public async static Task RemoveAllGText(List<DijkstraNode> nodes)
+        public static async Task RemoveAllGText(List<DijkstraNode> nodes)
         {
             for (int i = 0; i < nodes.Count; i++)
             {
